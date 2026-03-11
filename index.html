@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ekantik Alpha Engine — Institutional Intelligence, Individual Access | Ekantik Capital Advisors</title>
+  <meta name="description" content="The Ekantik Alpha Engine: one proprietary system, two modes — real-time detection and deep-dive research. 12 frameworks. Human-reviewed. Every signal tracked against a $100K model portfolio. Built for serious investors." />
+  <meta name="keywords" content="investment research, alpha generation, proprietary frameworks, stock research, portfolio management, fiduciary, wealth management" />
+  <meta name="author" content="Ekantik Capital Advisors LLC" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://alpha.ekantikcapital.com/" />
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://alpha.ekantikcapital.com/" />
+  <meta property="og:title" content="Ekantik Alpha Engine — Institutional Intelligence, Individual Access" />
+  <meta property="og:description" content="One proprietary system. Two modes. 12 frameworks. Human-reviewed. Every signal tracked against a $100K model portfolio. Start your 60-day free trial." />
+  <meta property="og:site_name" content="Ekantik Capital Advisors" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ekantik Alpha Engine — Institutional Intelligence, Individual Access" />
+  <meta name="twitter:description" content="One proprietary system. 12 frameworks. Human-reviewed. $100K model portfolio tracked live. 60-day free trial." />
+
+  <!-- Favicon (inline SVG data URI — gold E on navy) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231B2A4A'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-weight='900' font-size='20' fill='%23C8A951'%3EE%3C/text%3E%3C/svg%3E" />
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Critical CSS — prevent FOUC */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { 
+      background: #0a0f1e; 
+      color: #fff; 
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    #root { min-height: 100vh; }
+    /* Loading state */
+    #root:empty::after {
+      content: '';
+      display: block;
+      width: 40px; height: 40px;
+      margin: 45vh auto;
+      border: 3px solid rgba(200,169,81,0.2);
+      border-top-color: #C8A951;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 (Production) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Pre-compiled App (no Babel needed in browser) -->
+  <script src="app.js"></script>
+</body>
+</html>
