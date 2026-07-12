@@ -313,6 +313,25 @@
     .out-compare { font-size: 12.5px; color: #C8BFA8; margin-top: 3px; }
     .calc-assumptions { margin-top: 26px; padding: 16px 20px; background: rgba(0,0,0,0.25); border-radius: 8px; font-size: 11.5px; color: #8A8678; line-height: 1.7; }
     .calc-caption { margin-top: 14px; text-align: center; font-size: 11px; color: #8A8678; font-style: italic; line-height: 1.6; }
+    .decimal-dust { max-width: 720px; margin: 40px auto 0; text-align: center; font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(19px, 2.6vw, 26px); color: var(--gold-light); line-height: 1.4; }
+    .freedom-line { margin-top: 30px; padding-top: 26px; border-top: 1px solid rgba(200,169,81,0.25); }
+    .freedom-line h4 { font-family: 'Playfair Display', serif; font-size: 21px; color: var(--ivory); text-align: center; margin-bottom: 4px; }
+    .freedom-sub { text-align: center; font-size: 12.5px; color: #8A8678; margin-bottom: 20px; }
+    .freedom-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 560px; margin: 0 auto 20px; }
+    .freedom-inputs label { display: block; font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: #8A8678; margin-bottom: 5px; }
+    .freedom-inputs input { width: 100%; background: rgba(0,0,0,0.35); border: 1px solid rgba(200,169,81,0.25); border-radius: 6px; color: var(--ivory); font-size: 14px; padding: 8px 11px; font-family: 'DM Sans', sans-serif; }
+    .race-wrap { max-width: 640px; margin: 0 auto; }
+    .race-lane { margin-bottom: 14px; }
+    .race-label { display: flex; justify-content: space-between; font-size: 12px; color: #C8BFA8; margin-bottom: 5px; }
+    .race-label .yrs { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 15px; }
+    .race-bar { height: 14px; border-radius: 7px; background: rgba(0,0,0,0.35); overflow: hidden; }
+    .race-fill { height: 100%; border-radius: 7px; transition: width 400ms ease; }
+    .race-fill.you { background: linear-gradient(90deg, #7A5C4F, #E06C5A); }
+    .race-fill.bench { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+    .race-lane .yrs.you-c { color: #E06C5A; } .race-lane .yrs.bench-c { color: var(--gold); }
+    .freedom-punch { max-width: 620px; margin: 18px auto 0; text-align: center; font-size: 13.5px; color: #C8BFA8; line-height: 1.7; }
+    .freedom-punch strong { color: var(--gold); }
+    @media (max-width: 640px) { .freedom-inputs { grid-template-columns: 1fr; } }
 
     .pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; max-width: 1000px; margin: 0 auto; }
     .pillar-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(200,169,81,0.18); border-radius: 10px; padding: 30px 28px; }
@@ -412,6 +431,8 @@
 
       <p class="bridge-copy">The leak isn't ignorance. It's insurance. Cash buckets exist because everyone remembers what a −50% year feels like — and no spreadsheet argument survives contact with one. Which means the ROTA gap can't be closed by telling people to "stay invested." It can only be closed by a design where the worst case is bounded before the first dollar goes in.</p>
 
+      <p class="decimal-dust">"A few percentage points feels like decimal dust. Compounded, it's everything."</p>
+
       <div class="rota-calc">
         <h3>Your Return on Total Assets</h3>
         <p class="calc-sub">The number you've never computed. Every assumption below is editable — your inputs, your conclusion.</p>
@@ -440,6 +461,33 @@
           <strong>Assumptions (all editable above):</strong> Yield defaults are cited historical figures — savings 0–1% typical; CDs/bonds ~3–4% historical range; equities default set to the long-run S&amp;P 500 average total return (~10.3%; no Ekantik-supplied default exceeds this benchmark); "Other" is an illustrative user-defined default. Comparison column uses the same cited long-run index average. Rule-of-72 doubling is an approximation. Investor-blended-return context: DALBAR QAIB 2024.
         </div>
         <p class="calc-caption">Arithmetic projection from your inputs and historical averages. Not a forecast, recommendation, or guarantee. Past performance does not guarantee future results.</p>
+
+        <div class="freedom-line">
+          <h4>The Freedom Line</h4>
+          <p class="freedom-sub">The years-to-retirement race: your current blend vs. the benchmark arithmetic — on your numbers.</p>
+          <div class="freedom-inputs">
+            <div>
+              <label for="fl-income">Target annual retirement income ($)</label>
+              <input type="number" id="fl-income" value="80000" min="10000" step="5000" />
+            </div>
+            <div>
+              <label for="fl-wr">Withdrawal rate assumption (%)</label>
+              <input type="number" id="fl-wr" value="4" min="1" max="10" step="0.5" />
+            </div>
+          </div>
+          <div class="race-wrap">
+            <div class="race-lane">
+              <div class="race-label"><span>At your current blend (<span id="fl-blend-echo">—</span>)</span><span class="yrs you-c" id="fl-you-yrs">—</span></div>
+              <div class="race-bar"><div class="race-fill you" id="fl-you-bar" style="width:100%"></div></div>
+            </div>
+            <div class="race-lane">
+              <div class="race-label"><span>At the benchmark arithmetic (10.3%, cited long-run index avg)</span><span class="yrs bench-c" id="fl-bench-yrs">—</span></div>
+              <div class="race-bar"><div class="race-fill bench" id="fl-bench-bar" style="width:40%"></div></div>
+            </div>
+          </div>
+          <p class="freedom-punch" id="fl-punch">—</p>
+          <p class="calc-caption">Nest-egg figure derived from your income target and withdrawal-rate assumption (the common 4% heuristic; editable above). Same arithmetic-projection caveats as the calculator: not a forecast, recommendation, or guarantee.</p>
+        </div>
       </div>
 
       <p class="handoff-line">This is why the engine's first design constraint isn't return. It's participation.</p>
@@ -914,8 +962,49 @@
       var projBench = nw * Math.pow(1 + BENCH/100, 10);
       $('rc-proj').textContent = fmtUSD(projYou) + ' vs ' + fmtUSD(projBench);
       $('rc-proj-note').textContent = 'Gap over 10 years on your ' + fmtUSD(nw) + ': ' + fmtUSD(projBench - projYou) + '. Arithmetic projection — not a forecast.';
+
+      // ── The Freedom Line: years-to-retirement race (ported from the
+      //    Cost of Average / Freedom Line work on origin/main; re-based to
+      //    user-blend vs cited benchmark — no branded pace, per C-01/C-10) ──
+      var income = Math.max(num('fl-income'), 0);
+      var wr = Math.max(num('fl-wr'), 0.5);
+      var nestEgg = income / (wr / 100);
+
+      function yearsTo(target, start, ratePct) {
+        if (start <= 0 || target <= start) return 0;
+        if (ratePct <= 0.05) return Infinity;
+        return Math.log(target / start) / Math.log(1 + ratePct / 100);
+      }
+      var tYou = yearsTo(nestEgg, nw, blend);
+      var tBench = yearsTo(nestEgg, nw, BENCH);
+
+      $('fl-blend-echo').textContent = blend.toFixed(2) + '%';
+      $('fl-you-yrs').textContent = isFinite(tYou) ? (tYou <= 0 ? 'already there' : '~' + tYou.toFixed(0) + ' yrs') : 'never';
+      $('fl-bench-yrs').textContent = tBench <= 0 ? 'already there' : '~' + tBench.toFixed(0) + ' yrs';
+
+      // Race bars: benchmark lane scaled relative to the slower lane
+      var maxT = Math.max(isFinite(tYou) ? tYou : tBench * 3, tBench, 1);
+      $('fl-you-bar').style.width = Math.min(100, ((isFinite(tYou) ? tYou : maxT) / maxT) * 100) + '%';
+      $('fl-bench-bar').style.width = Math.min(100, (tBench / maxT) * 100) + '%';
+
+      // The out-of-pocket line: monthly savings needed to hit the benchmark
+      // date while earning only the current blend. Compounding does it for free.
+      var punch = $('fl-punch');
+      if (nestEgg <= nw) {
+        punch.textContent = 'Your target nest egg (' + fmtUSD(nestEgg) + ') is already covered by your current net worth.';
+      } else if (!isFinite(tYou) || tYou - tBench < 0.5) {
+        punch.textContent = 'Nest egg required for that income: ' + fmtUSD(nestEgg) + ' (at your ' + wr.toFixed(1) + '% withdrawal assumption).';
+      } else {
+        var rm = blend / 100 / 12;
+        var nMo = Math.max(Math.round(tBench * 12), 1);
+        var fvGrowth = nw * Math.pow(1 + blend / 100, tBench);
+        var annuityFactor = rm > 0 ? (Math.pow(1 + rm, nMo) - 1) / rm : nMo;
+        var monthly = Math.max((nestEgg - fvGrowth) / annuityFactor, 0);
+        punch.innerHTML = 'To reach ' + fmtUSD(nestEgg) + ' by the benchmark date while earning your current blend, you would need to add <strong>' + fmtUSD(monthly) + '/month out of pocket</strong> — every single month for ~' + tBench.toFixed(0) + ' years. Compounding at the higher blended rate does that work instead. The gap is ~' + (tYou - tBench).toFixed(0) + ' years of your life.';
+      }
     }
 
+    ids = ids.concat(['fl-income', 'fl-wr']);
     for (var i = 0; i < ids.length; i++) {
       var el = $(ids[i]);
       if (el) { el.addEventListener('input', recalc); }
