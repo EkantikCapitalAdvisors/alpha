@@ -474,6 +474,14 @@
               <label for="fl-wr">Withdrawal rate assumption (%)</label>
               <input type="number" id="fl-wr" value="4" min="1" max="10" step="0.5" />
             </div>
+            <div>
+              <label for="fl-contrib">Cash added every year ($/yr)</label>
+              <input type="number" id="fl-contrib" value="0" min="0" step="1000" />
+            </div>
+            <div>
+              <label for="fl-cagr">Comparison CAGR (%) — default: cited index avg</label>
+              <input type="number" id="fl-cagr" value="10.3" min="0.5" step="0.1" />
+            </div>
           </div>
           <div class="race-wrap">
             <div class="race-lane">
@@ -481,12 +489,12 @@
               <div class="race-bar"><div class="race-fill you" id="fl-you-bar" style="width:100%"></div></div>
             </div>
             <div class="race-lane">
-              <div class="race-label"><span>At the benchmark arithmetic (10.3%, cited long-run index avg)</span><span class="yrs bench-c" id="fl-bench-yrs">—</span></div>
+              <div class="race-label"><span>At <span id="fl-cagr-echo">10.3%</span> CAGR (<span id="fl-cagr-note">cited long-run index avg</span>)</span><span class="yrs bench-c" id="fl-bench-yrs">—</span></div>
               <div class="race-bar"><div class="race-fill bench" id="fl-bench-bar" style="width:40%"></div></div>
             </div>
           </div>
           <p class="freedom-punch" id="fl-punch">—</p>
-          <p class="calc-caption">Nest-egg figure derived from your income target and withdrawal-rate assumption (the common 4% heuristic; editable above). Same arithmetic-projection caveats as the calculator: not a forecast, recommendation, or guarantee.</p>
+          <p class="calc-caption">Nest-egg figure derived from your income target and withdrawal-rate assumption (the common 4% heuristic; editable above). Annual additions compound yearly. The comparison CAGR defaults to the cited long-run index average — entering a different rate makes it your assumption, and the lane is labeled accordingly. Same arithmetic-projection caveats as the calculator: not a forecast, recommendation, or guarantee.</p>
         </div>
       </div>
 
@@ -965,46 +973,63 @@
 
       // ── The Freedom Line: years-to-retirement race (ported from the
       //    Cost of Average / Freedom Line work on origin/main; re-based to
-      //    user-blend vs cited benchmark — no branded pace, per C-01/C-10) ──
+      //    user-blend vs cited benchmark — no branded pace, per C-01/C-10).
+      //    Annual contributions + editable comparison CAGR: user-supplied
+      //    assumptions may exceed the benchmark; the default never does. ──
       var income = Math.max(num('fl-income'), 0);
       var wr = Math.max(num('fl-wr'), 0.5);
       var nestEgg = income / (wr / 100);
+      var contrib = Math.max(num('fl-contrib'), 0);
+      var cagr = num('fl-cagr'); if (!(cagr > 0)) { cagr = BENCH; }
 
-      function yearsTo(target, start, ratePct) {
-        if (start <= 0 || target <= start) return 0;
-        if (ratePct <= 0.05) return Infinity;
-        return Math.log(target / start) / Math.log(1 + ratePct / 100);
+      // Iterative year-count (no closed form once annual additions exist)
+      function yearsTo(target, start, ratePct, annualAdd) {
+        if (target <= start) return 0;
+        var r = ratePct / 100;
+        if (r <= 0.0005 && annualAdd <= 0) return Infinity;
+        var bal = start;
+        for (var yr = 1; yr <= 120; yr++) {
+          bal = bal * (1 + r) + annualAdd;
+          if (bal >= target) return yr;
+        }
+        return Infinity;
       }
-      var tYou = yearsTo(nestEgg, nw, blend);
-      var tBench = yearsTo(nestEgg, nw, BENCH);
+      var tYou = yearsTo(nestEgg, nw, blend, contrib);
+      var tCmp = yearsTo(nestEgg, nw, cagr, contrib);
 
       $('fl-blend-echo').textContent = blend.toFixed(2) + '%';
-      $('fl-you-yrs').textContent = isFinite(tYou) ? (tYou <= 0 ? 'already there' : '~' + tYou.toFixed(0) + ' yrs') : 'never';
-      $('fl-bench-yrs').textContent = tBench <= 0 ? 'already there' : '~' + tBench.toFixed(0) + ' yrs';
+      $('fl-cagr-echo').textContent = cagr.toFixed(1) + '%';
+      $('fl-cagr-note').textContent = (Math.abs(cagr - BENCH) < 0.05) ? 'cited long-run index avg' : 'your assumption';
+      $('fl-you-yrs').textContent = isFinite(tYou) ? (tYou <= 0 ? 'already there' : '~' + tYou + ' yrs') : '100+ yrs';
+      $('fl-bench-yrs').textContent = isFinite(tCmp) ? (tCmp <= 0 ? 'already there' : '~' + tCmp + ' yrs') : '100+ yrs';
 
-      // Race bars: benchmark lane scaled relative to the slower lane
-      var maxT = Math.max(isFinite(tYou) ? tYou : tBench * 3, tBench, 1);
-      $('fl-you-bar').style.width = Math.min(100, ((isFinite(tYou) ? tYou : maxT) / maxT) * 100) + '%';
-      $('fl-bench-bar').style.width = Math.min(100, (tBench / maxT) * 100) + '%';
+      // Race bars scaled relative to the slower lane
+      var tYouBar = isFinite(tYou) ? tYou : 120;
+      var tCmpBar = isFinite(tCmp) ? tCmp : 120;
+      var maxT = Math.max(tYouBar, tCmpBar, 1);
+      $('fl-you-bar').style.width = Math.min(100, (tYouBar / maxT) * 100) + '%';
+      $('fl-bench-bar').style.width = Math.min(100, (tCmpBar / maxT) * 100) + '%';
 
-      // The out-of-pocket line: monthly savings needed to hit the benchmark
-      // date while earning only the current blend. Compounding does it for free.
+      // The out-of-pocket line: EXTRA monthly savings (beyond the annual cash
+      // already added above) needed to hit the comparison date at the blend.
       var punch = $('fl-punch');
       if (nestEgg <= nw) {
         punch.textContent = 'Your target nest egg (' + fmtUSD(nestEgg) + ') is already covered by your current net worth.';
-      } else if (!isFinite(tYou) || tYou - tBench < 0.5) {
+      } else if (!isFinite(tCmp) || !isFinite(tYou) || tYou - tCmp < 1) {
         punch.textContent = 'Nest egg required for that income: ' + fmtUSD(nestEgg) + ' (at your ' + wr.toFixed(1) + '% withdrawal assumption).';
       } else {
-        var rm = blend / 100 / 12;
-        var nMo = Math.max(Math.round(tBench * 12), 1);
-        var fvGrowth = nw * Math.pow(1 + blend / 100, tBench);
+        var rA = blend / 100;
+        var fvGrowth = nw * Math.pow(1 + rA, tCmp) + (rA > 0 ? contrib * ((Math.pow(1 + rA, tCmp) - 1) / rA) : contrib * tCmp);
+        var rm = rA / 12;
+        var nMo = Math.max(Math.round(tCmp * 12), 1);
         var annuityFactor = rm > 0 ? (Math.pow(1 + rm, nMo) - 1) / rm : nMo;
         var monthly = Math.max((nestEgg - fvGrowth) / annuityFactor, 0);
-        punch.innerHTML = 'To reach ' + fmtUSD(nestEgg) + ' by the benchmark date while earning your current blend, you would need to add <strong>' + fmtUSD(monthly) + '/month out of pocket</strong> — every single month for ~' + tBench.toFixed(0) + ' years. Compounding at the higher blended rate does that work instead. The gap is ~' + (tYou - tBench).toFixed(0) + ' years of your life.';
+        var extraWord = contrib > 0 ? ' <em>on top of</em> the ' + fmtUSD(contrib) + '/yr you already add' : ' out of pocket';
+        punch.innerHTML = 'To reach ' + fmtUSD(nestEgg) + ' by the comparison date while earning your current blend, you would need to add <strong>' + fmtUSD(monthly) + '/month</strong>' + extraWord + ' — every single month for ~' + tCmp + ' years. Compounding at the higher rate does that work instead. The gap is ~' + (tYou - tCmp) + ' years of your life.';
       }
     }
 
-    ids = ids.concat(['fl-income', 'fl-wr']);
+    ids = ids.concat(['fl-income', 'fl-wr', 'fl-contrib', 'fl-cagr']);
     for (var i = 0; i < ids.length; i++) {
       var el = $(ids[i]);
       if (el) { el.addEventListener('input', recalc); }
