@@ -442,6 +442,8 @@
             <input type="number" id="rc-networth" value="100000" min="1000" step="1000" />
             <label for="rc-years">Years to retirement target</label>
             <input type="number" id="rc-years" value="20" min="1" max="60" step="1" />
+            <label for="rc-bench">Comparison benchmark rate (%) — default: cited index avg</label>
+            <input type="number" id="rc-bench" value="10.3" min="0.5" step="0.1" />
             <label style="margin-top:20px;">Allocation &amp; assumed yield per bucket</label>
             <div class="alloc-head"><span>Bucket</span><span>Alloc %</span><span>Yield %</span></div>
             <div class="alloc-row"><span>Cash &amp; savings</span><input type="number" id="rc-a1" value="30" min="0" max="100" /><input type="number" id="rc-y1" value="0.5" min="0" step="0.1" /></div>
@@ -454,11 +456,11 @@
             <div class="out-card"><div class="out-label">Your blended ROTA</div><div class="out-value" id="rc-blend">—</div><div class="out-compare" id="rc-blend-note"></div></div>
             <div class="out-card"><div class="out-label">Doubling time (Rule of 72)</div><div class="out-value" id="rc-double">—</div><div class="out-compare" id="rc-double-note"></div></div>
             <div class="out-card"><div class="out-label">Doubles remaining before your target date</div><div class="out-value" id="rc-doubles">—</div><div class="out-compare" id="rc-doubles-note"></div></div>
-            <div class="out-card"><div class="out-label">Value in 10 years — your blend vs. benchmark arithmetic</div><div class="out-value" id="rc-proj">—</div><div class="out-compare" id="rc-proj-note"></div></div>
+            <div class="out-card"><div class="out-label">Value in 10 years — your blend vs. <span id="rc-bench-echo">10.3%</span> (<span id="rc-bench-note-inline">cited index avg</span>)</div><div class="out-value" id="rc-proj">—</div><div class="out-compare" id="rc-proj-note"></div></div>
           </div>
         </div>
         <div class="calc-assumptions">
-          <strong>Assumptions (all editable above):</strong> Yield defaults are cited historical figures — savings 0–1% typical; CDs/bonds ~3–4% historical range; equities default set to the long-run S&amp;P 500 average total return (~10.3%; no Ekantik-supplied default exceeds this benchmark); "Other" is an illustrative user-defined default. Comparison column uses the same cited long-run index average. Rule-of-72 doubling is an approximation. Investor-blended-return context: DALBAR QAIB 2024.
+          <strong>Assumptions (all editable above):</strong> Yield defaults are cited historical figures — savings 0–1% typical; CDs/bonds ~3–4% historical range; equities default set to the long-run S&amp;P 500 average total return (~10.3%; no Ekantik-supplied default exceeds this benchmark); "Other" is an illustrative user-defined default. The comparison benchmark rate defaults to the same cited long-run index average and is independently editable — entering a different rate relabels the comparison "your assumption" rather than a cited figure. Rule-of-72 doubling is an approximation. Investor-blended-return context: DALBAR QAIB 2024.
         </div>
         <p class="calc-caption">Arithmetic projection from your inputs and historical averages. Not a forecast, recommendation, or guarantee. Past performance does not guarantee future results.</p>
 
@@ -930,12 +932,14 @@
 
   <script>
   // ROTA Calculator (ENH-12, spec v2.0). State-only, no storage. All assumptions
-  // editable and visible. Benchmark comparison fixed to the cited long-run index
-  // average (10.3%). C-09: every dollar figure on this surface is generated here,
-  // from the visitor's own inputs — never asserted statically.
+  // editable and visible. Benchmark comparison DEFAULTS to the cited long-run
+  // index average (10.3%) but is user-editable (#rc-bench); values other than
+  // the default relabel the comparison as "your assumption," never an
+  // Ekantik-supplied claim. C-09: every dollar figure on this surface is
+  // generated here, from the visitor's own inputs — never asserted statically.
   (function () {
-    var BENCH = 10.3; // cited long-run S&P 500 average total return, %
-    var ids = ['rc-networth','rc-years','rc-a1','rc-a2','rc-a3','rc-a4','rc-y1','rc-y2','rc-y3','rc-y4'];
+    var CITED_BENCH = 10.3; // cited long-run S&P 500 average total return, % — the default only
+    var ids = ['rc-networth','rc-years','rc-bench','rc-a1','rc-a2','rc-a3','rc-a4','rc-y1','rc-y2','rc-y3','rc-y4'];
     function $(id) { return document.getElementById(id); }
     function num(id) { var v = parseFloat($(id) && $(id).value); return isFinite(v) ? v : 0; }
     function fmtUSD(x) { return '$' + Math.round(x).toLocaleString('en-US'); }
@@ -943,6 +947,12 @@
     function recalc() {
       var nw = Math.max(num('rc-networth'), 0);
       var yrs = Math.max(num('rc-years'), 1);
+      var BENCH = num('rc-bench'); if (!(BENCH > 0)) { BENCH = CITED_BENCH; }
+      var benchIsDefault = Math.abs(BENCH - CITED_BENCH) < 0.05;
+      var benchWord = benchIsDefault ? 'cited long-run index avg' : 'your assumption';
+      $('rc-bench-echo').textContent = BENCH.toFixed(1) + '%';
+      $('rc-bench-note-inline').textContent = benchWord;
+
       var a = [num('rc-a1'), num('rc-a2'), num('rc-a3'), num('rc-a4')];
       var y = [num('rc-y1'), num('rc-y2'), num('rc-y3'), num('rc-y4')];
       var allocSum = a[0] + a[1] + a[2] + a[3];
@@ -954,7 +964,7 @@
       var blend = (a[0]*y[0] + a[1]*y[1] + a[2]*y[2] + a[3]*y[3]) / denom;
 
       $('rc-blend').textContent = blend.toFixed(2) + '%';
-      $('rc-blend-note').textContent = 'DALBAR QAIB 2024 places the average investor at 4–5%. Benchmark arithmetic: ' + BENCH.toFixed(1) + '%.';
+      $('rc-blend-note').textContent = 'DALBAR QAIB 2024 places the average investor at 4–5%. Benchmark arithmetic (' + benchWord + '): ' + BENCH.toFixed(1) + '%.';
 
       var dblYou = blend > 0.05 ? 72 / blend : Infinity;
       var dblBench = 72 / BENCH;
@@ -980,7 +990,7 @@
       var wr = Math.max(num('fl-wr'), 0.5);
       var nestEgg = income / (wr / 100);
       var contrib = Math.max(num('fl-contrib'), 0);
-      var cagr = num('fl-cagr'); if (!(cagr > 0)) { cagr = BENCH; }
+      var cagr = num('fl-cagr'); if (!(cagr > 0)) { cagr = CITED_BENCH; }
 
       // Iterative year-count (no closed form once annual additions exist)
       function yearsTo(target, start, ratePct, annualAdd) {
@@ -999,7 +1009,7 @@
 
       $('fl-blend-echo').textContent = blend.toFixed(2) + '%';
       $('fl-cagr-echo').textContent = cagr.toFixed(1) + '%';
-      $('fl-cagr-note').textContent = (Math.abs(cagr - BENCH) < 0.05) ? 'cited long-run index avg' : 'your assumption';
+      $('fl-cagr-note').textContent = (Math.abs(cagr - CITED_BENCH) < 0.05) ? 'cited long-run index avg' : 'your assumption';
       $('fl-you-yrs').textContent = isFinite(tYou) ? (tYou <= 0 ? 'already there' : '~' + tYou + ' yrs') : '100+ yrs';
       $('fl-bench-yrs').textContent = isFinite(tCmp) ? (tCmp <= 0 ? 'already there' : '~' + tCmp + ' yrs') : '100+ yrs';
 
