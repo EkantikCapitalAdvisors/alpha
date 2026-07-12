@@ -1,0 +1,10 @@
+# Binaries / decks / archives — not site source
+*.pptx
+*.docx
+*.zip
+*.bak
+# Scripts containing API credentials — NEVER commit
+*.py
+# Local tooling state
+.wrangler/
+.claude/
